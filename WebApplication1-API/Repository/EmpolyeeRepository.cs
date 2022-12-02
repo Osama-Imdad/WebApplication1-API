@@ -33,7 +33,7 @@ namespace WebApplication1_API.Repository
             if (data != null)
             {
                _Context.Empolyee.Remove(data);
-               _Context.SaveChangesAsync();
+               await _Context.SaveChangesAsync();
                 return data;
             }
             return null;

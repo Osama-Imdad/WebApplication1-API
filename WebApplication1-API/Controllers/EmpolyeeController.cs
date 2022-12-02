@@ -2,6 +2,8 @@
 using WebApplication1_API.Repository;
 using Microsoft.AspNetCore.Http;
 using DataAccessLayers;
+using WebApplication1_API.VieModel;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplication1_API.Controllers
 {
@@ -16,6 +18,7 @@ namespace WebApplication1_API.Controllers
         }
 
         //Getting All Records 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult> GetEmpolyee()
         {
@@ -35,12 +38,34 @@ namespace WebApplication1_API.Controllers
             try
 
             {
-                var record = await _empolyeeRepository.GetEmployee(Id);
-                if (record == null)
+
+                EmpolyeeViewModel empolyeeView = new EmpolyeeViewModel();
+                if (Id>0)
                 {
-                    return NotFound();
+                    var record = await _empolyeeRepository.GetEmployee(Id);
+                    if (record != null)
+                    {
+                        empolyeeView.Id = record.Id;
+                        empolyeeView.contactNum = record.contactNum;
+                        empolyeeView.name = record.name;
+                        empolyeeView.department = record.department;
+                        empolyeeView.Message = "Success";
+                        empolyeeView.Status = true;
+                    }
+                    else
+                    {
+                        empolyeeView.Message = "False";
+                        empolyeeView.Status = false;
+                    }
+                    return Ok(empolyeeView);
                 }
-                return record;
+                else
+                {
+                    empolyeeView.Message = "False";
+                    empolyeeView.Status = false;
+                     return Ok(empolyeeView);
+                }
+
 
             }
             catch (Exception)
@@ -55,12 +80,34 @@ namespace WebApplication1_API.Controllers
         {
             try
             {
-                if(empolyee == null)
+                EmpolyeeViewModel empolyeeView = new EmpolyeeViewModel();
+                if (empolyee == null)
                 {
-                    return BadRequest();
+                    empolyeeView.Message = "Employee not added";
+                    empolyeeView.Status = false;
+                    return Ok(empolyeeView);
                 }
-                var createdEmpolyee= await _empolyeeRepository.AddEmpoloyees(empolyee);
-                return CreatedAtAction(nameof(GetEmpolyee), new { Id = createdEmpolyee.Id }, createdEmpolyee);
+                else
+                {
+                    var createdEmpolyee = await _empolyeeRepository.AddEmpoloyees(empolyee);
+                    if (createdEmpolyee != null)
+                    {
+                        empolyeeView.Id = createdEmpolyee.Id;
+                        empolyeeView.department = createdEmpolyee.department;
+                        empolyeeView.name = createdEmpolyee.name;
+                        empolyee.designation = createdEmpolyee.designation;
+                        empolyeeView.contactNum = createdEmpolyee.contactNum;
+                        empolyeeView.Status = true;
+                        empolyeeView.Message = "Employee added";
+                        return Ok(empolyeeView);
+                    }
+                    else
+                    {
+                        empolyeeView.Message = "Something went wrong";
+                        empolyeeView.Status = false;
+                        return Ok(empolyeeView);
+                    }
+                }
             }
             catch(Exception)
             {
@@ -74,21 +121,38 @@ namespace WebApplication1_API.Controllers
         {
             try
             {
+                EmpolyeeViewModel empolyeeView = new EmpolyeeViewModel();
                 if (empolyee != null)
                 {
                     var employeeUpdate = await _empolyeeRepository.GetEmployee(empolyee.Id);
                     if (employeeUpdate == null)
                     {
-                        return NotFound($"Empolyee not found");
+                        empolyeeView.Message = "Empolyee not found";
+                        empolyeeView.Status = false;
+                        return Ok(empolyeeView);
                     }
                     else
                     {
-                        return await _empolyeeRepository.UpdateEmpolyee(empolyee);
+                        var employe = await _empolyeeRepository.UpdateEmpolyee(empolyee);
+                        if (employe != null)
+                        {
+                            empolyeeView.Message = "Empolyee record updated";
+                            empolyeeView.Status = true;
+                            return Ok(empolyeeView);
+                        }
+                        else
+                        {
+                            empolyeeView.Message = "Empolyee not found";
+                            empolyeeView.Status = false;
+                            return Ok(empolyeeView);
+                        }
                     }
                 }
                 else
                 {
-                    return BadRequest("Id Mismatch");
+                    empolyeeView.Message = "Empolyee not found";
+                    empolyeeView.Status = false;
+                    return Ok(empolyeeView);
                 }
             }
             catch(Exception)
@@ -102,12 +166,39 @@ namespace WebApplication1_API.Controllers
         {
             try
             {
-                var employeeDelete = await _empolyeeRepository.GetEmployee(Id);
-                if(employeeDelete == null)
+                EmpolyeeViewModel empolyeeView = new EmpolyeeViewModel();
+                if (Id>0)
                 {
-                    return NotFound($"Empolyee Id={Id} not Found");
+                    var employeeDelete = await _empolyeeRepository.GetEmployee(Id);
+                    if (employeeDelete != null)
+                    {
+                        var delemp = await _empolyeeRepository.DeleteEmployee(Id);
+                        if (delemp != null)
+                        {
+                            empolyeeView.Status = true;
+                            empolyeeView.Message = "Employee Deleted";
+                        }
+                        else
+                        {
+                            empolyeeView.Status = false;
+                            empolyeeView.Message = "Employee Not Deleted";
+                        }
+
+                        
+                    }
+                    else
+                    {
+                        empolyeeView.Status = true;
+                        empolyeeView.Message = "Something went wrong";
+                    }
+                    return Ok(empolyeeView);
                 }
-                return await _empolyeeRepository.DeleteEmployee(Id);
+                else
+                {
+                    empolyeeView.Status = false;
+                    empolyeeView.Message = "Something went wrong";
+                    return Ok(empolyeeView);
+                }
             }
             catch (Exception)
             {

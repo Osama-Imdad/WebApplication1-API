@@ -75,7 +75,7 @@ namespace WebApplication1_API.Repository
                 };
             }
             var record = await _userManger.CheckPasswordAsync(user,loginModel.Password);
-            if(record==null)
+            if(record == false)
             {
                 return new UserMangerResponse
                 {
